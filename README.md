@@ -1,81 +1,187 @@
 # FixaTons
-A collection of Human FixationsDatasets and Metrics for Scanpath Similarity
 
-## Citations
-If you intend to use this collection of datasets on your research, please cite the technical report
+[![PyPI version](https://badge.fury.io/py/FixaTons.svg)](https://pypi.org/project/FixaTons/)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-- FixaTons technical report: https://arxiv.org/abs/1802.02534
+FixaTons is a Python toolkit for working with eye-tracking datasets, fixation maps, saliency maps, and scanpath similarity metrics.
 
-and also, all the correspondent pubblications for the dataset included:
+## What It Provides
 
+- Dataset discovery helpers for bundled or externally mounted datasets
+- Direct loading of stimuli, saliency maps, fixation maps, and subject scanpaths
+- Visualization utilities for maps and scanpaths
+- Saliency metrics such as AUC-Judd, shuffled AUC, KL divergence, NSS, and information gain
+- Scanpath metrics such as string edit distance, time-delay embedding, RQA, ScanMatch, and MultiMatch
+- Basic statistical summaries over datasets
 
-- MIT1003: http://people.csail.mit.edu/tjudd/WherePeopleLook/Docs/wherepeoplelook.pdf
+## Installation
 
- Authors of compatible datasets are encouraged to add them to this collection. Simply send an email to the corresponding author of this report along with an authorization to redistribute that data. Below, the list of datasets currently added to the collection.
+```bash
+pip install FixaTons
+```
 
-    
-## Download FixaTons
+For local development:
 
-- Clone or download the folder with the code
-- Download the zip file from https://drive.google.com/file/d/16i3GItnUAkWfATGFDF5qCqJbZFTCyWHA/ and extract its content in the same folder with the code
+```bash
+git clone https://github.com/dariozanca/FixaTons.git
+cd FixaTons
+pip install -e .[dev]
+```
 
-## Structure of FixaTons
+## Dataset Location
 
-________________________________________________________________________________
+By default, the package looks for datasets in:
 
-- FixaTons
+- `Dataset/`
+- `Datasets/`
 
-    - DATASET_NAME
+You can override that with:
 
-        - STIMULI : contains original images.
-                  They can have different file format (jpg, jpeg, png,...)
+```bash
+export FIXATONS_DATASETS_PATH=/path/to/datasets
+```
 
-        - SCANPATHS : contains one folder for each image
+The current repository already includes sample datasets under `Dataset/`.
 
-            - IMAGE_ID :
-                  it contains one file for each scanpath of that image
-                  scanpaths are matrices
-                  rows of this matrices describe fixations
-                  each fixation is of the form :
-                  [x-pixel, inverted-y-pixel, initial time, final time]
-                  Times are in seconds.
+## Tutorial
 
-        - FIXATION_MAPS : contains a fixation map of each original image
-            they are matrices of zeros (NON-fixated pixels) and 255's (fixated
-            pixels). They can have different file format (jpg, jpeg, png,...)
+Start with the main notebook:
 
-        - SALIENCY_MAPS : contains saliency maps of each original image
-            they are generated from human data. They can have different file
-            format (jpg, jpeg, png,...)
-            
-________________________________________________________________________________
+- [Tutorial.ipynb](/Users/dariozanca/Documents/GitHub/FixaTons/Tutorial.ipynb)
 
-## Implemented metrics for saliency maps and scanpaths evaluation
+The tutorial path and follow-up material are indexed in:
 
-- Metrics for saliency prediction task:
-	- AUC_Judd (Area Under the ROC Curve, Judd version)
-	- AUC_shuffled
-	- KLdiv 
-	- NSS (Normalized Scanpath Saliency)
-	- InfoGain
-- Metrics for scanpaths prediction task:
-	- euclidean_distance
-	- string_edit_distance
-	- scaled_time_delay_embedding_distance
-	- string-based time-delay embeddings
-    - Recurrence Quantification Analysis (RQA)
-    - ScanMatch
-    - MultiMatch
+- [docs/tutorials/README.md](/Users/dariozanca/Documents/GitHub/FixaTons/docs/tutorials/README.md)
 
+## Contributing Datasets
 
-## How to use FixaTons (with python)
+If you want to add another dataset to the repository, use the dataset contribution guide:
 
-For an easy use of the dataset, python software is provided. This tools help you in different tasks:
+- [docs/contributing-datasets.md](/Users/dariozanca/Documents/GitHub/FixaTons/docs/contributing-datasets.md)
 
-    - List information
-    - Get data (matrices)
-    - Visualize data
-    - Compute metrics
-    - Compute statistics
+## Quick Start
 
-For some example codes, please refer to the correspondent report or Tutorial.ipynb (jupiter notebook) https://github.com/dariozanca/FixaTons/blob/master/Tutorial.ipynb.
+```python
+import FixaTons as ft
+
+dataset = "SIENA12"
+stimulus_name = "sunset.jpg"
+
+print(ft.info.datasets())
+print(ft.info.subjects(dataset, stimulus_name)[:3])
+
+stimulus = ft.stimulus(dataset, stimulus_name)
+fixation_map = ft.fixation_map(dataset, stimulus_name)
+saliency_map = ft.saliency_map(dataset, stimulus_name)
+scanpath = ft.scanpath(dataset, stimulus_name)
+
+score = ft.auc_judd(saliency_map, fixation_map, jitter=False)
+print(score)
+```
+
+Legacy grouped access is still available:
+
+```python
+stimulus = ft.get.stimulus(dataset, stimulus_name)
+scanpath = ft.get.scanpath(dataset, stimulus_name)
+```
+
+## Included Dataset Layout
+
+The package supports both the original legacy layout and a normalized lowercase layout.
+
+Legacy layout:
+
+```text
+Dataset/
+└── DATASET_NAME/
+    ├── STIMULI/
+    ├── SCANPATHS/
+    │   └── IMAGE_ID/
+    │       └── SUBJECT_ID
+    ├── FIXATION_MAPS/
+    └── SALIENCY_MAPS/
+```
+
+Normalized layout:
+
+```text
+dataset_name/
+├── stimuli/
+├── scanpaths/
+├── fixation_maps/
+├── saliency_maps/
+├── metadata.json
+└── checksums.md5
+```
+
+Utility helpers are exposed for validation, checksum generation, and migration:
+
+```python
+ft.validate_dataset_structure(path)
+ft.generate_checksums(path)
+ft.verify_checksums(path)
+ft.migrate_legacy_structure(old_path, new_path)
+```
+
+Command line usage is also available:
+
+```bash
+fixatons-datasets inspect Dataset/SIENA12
+fixatons-datasets validate Dataset/TORONTO
+fixatons-datasets generate --collection Dataset
+```
+
+## Main API
+
+Information helpers:
+
+- `ft.info.datasets()`
+- `ft.info.stimuli(dataset_name)`
+- `ft.info.subjects(dataset_name, stimulus_name)`
+
+Direct data access:
+
+- `ft.stimulus(dataset_name, stimulus_name)`
+- `ft.fixation_map(dataset_name, stimulus_name)`
+- `ft.saliency_map(dataset_name, stimulus_name)`
+- `ft.scanpath(dataset_name, stimulus_name, subject="...")`
+
+Statistics:
+
+- `ft.statistics(dataset_name=None)`
+- `ft.fps(scanpath)`
+- `ft.sac_len(scanpath)`
+
+Metrics:
+
+- `ft.auc_judd(...)`
+- `ft.auc_shuffled(...)`
+- `ft.kl_divergence(...)`
+- `ft.nss(...)`
+- `ft.information_gain(...)`
+- `ft.string_edit_distance(...)`
+- `ft.scaled_time_delay_embedding_distance(...)`
+- `ft.compute_rqa_metrics(...)`
+- `ft.scanmatch_metric(...)`
+- `ft.multimatch_metric(...)`
+
+## Citation
+
+If you use FixaTons in research, cite:
+
+```bibtex
+@article{zanca2018fixatons,
+  title={FixaTons: A collection of human fixations datasets and metrics for scanpath similarity},
+  author={Zanca, Dario},
+  journal={arXiv preprint arXiv:1802.02534},
+  year={2018}
+}
+```
+
+Technical report: https://arxiv.org/abs/1802.02534
+
+## License
+
+MIT. See `LICENSE`.

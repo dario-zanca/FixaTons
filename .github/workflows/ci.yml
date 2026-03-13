@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        flake8 FixaTons tests --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 FixaTons tests --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+    - name: Type check with mypy
+      run: |
+        pip install mypy
+        mypy FixaTons
+
+    - name: Test with pytest
+      run: |
+        pip install pytest pytest-cov
+        pytest --cov=FixaTons --cov-report=xml
+
+    - name: Bytecode compile check
+      run: |
+        python -m compileall FixaTons tests
+
+    - name: Validate bundled datasets
+      run: |
+        python -m FixaTons validate Dataset/KOOTSTRA
+        python -m FixaTons validate Dataset/MIT1003
+        python -m FixaTons validate Dataset/SIENA12
+        python -m FixaTons validate Dataset/TORONTO
+        python -m FixaTons verify-checksums Dataset/KOOTSTRA
+        python -m FixaTons verify-checksums Dataset/MIT1003
+        python -m FixaTons verify-checksums Dataset/SIENA12
+        python -m FixaTons verify-checksums Dataset/TORONTO
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false

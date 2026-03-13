@@ -1,49 +1,45 @@
-'''
-@author: Dario Zanca, Ph.D.
-@institutions: University of Siena
+"""Backward-compatible module shim for the packaged FixaTons API."""
 
-@e-mail: dariozanca@gmail.it
-@tel: (+39) 333 82 78 072
+from __future__ import annotations
 
-@date: October, 2017
-'''
+import warnings
 
-#########################################################################################
+import FixaTons as ft
 
-import os
-
-COLLECTION_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    'Datasets'
+warnings.warn(
+    "Importing from 'FixaTons.py' is deprecated; use 'import FixaTons as ft' instead.",
+    DeprecationWarning,
+    stacklevel=2,
 )
 
-'''COLLECTION_PATH = os.path.join(
-    'E:\DATASETS\FixaTons',
-    'FixaTons'
-)'''
+info = ft.info
+get = ft.get
+show = ft.show
+metrics = ft.metrics
+stats = ft.stats
+stimulus = ft.stimulus
+fixation_map = ft.fixation_map
+saliency_map = ft.saliency_map
+scanpath = ft.scanpath
+statistics = ft.statistics
+fps = ft.fps
+sac_len = ft.sac_len
+COLLECTION_PATH = ft.COLLECTION_PATH
+__version__ = ft.__version__
 
-'''
-This file includes tools to an easy use of the collection of datasets. 
-This tools help you in different tasks:
-    - List information
-    - Get data (matrices)
-    - Visualize data
-    - Compute metrics
-'''
-
-#########################################################################################
-
-# IMPORT EXTERNAL LIBRARIES
-
-import sys
-sys.path.insert(1, 'FixaTons/')
-
-import os
-import cv2
-import numpy as np
-
-import _list_information_functions as info
-import _get_data_functions as get
-import _visualize_data_functions as show
-import _visual_attention_metrics as metrics
-import _compute_statistics as stats
+__all__ = [
+    "info",
+    "get",
+    "show",
+    "metrics",
+    "stats",
+    "stimulus",
+    "fixation_map",
+    "saliency_map",
+    "scanpath",
+    "statistics",
+    "fps",
+    "sac_len",
+    "COLLECTION_PATH",
+    "__version__",
+]

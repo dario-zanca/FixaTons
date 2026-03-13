@@ -14,7 +14,8 @@
 
 import cv2
 import numpy as np
-import _get_data_functions as get
+from .. import COLLECTION_PATH
+from ..data import loader as get
 
 #########################################################################################
 
